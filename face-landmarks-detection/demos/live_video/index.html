@@ -31,8 +31,81 @@ limitations under the License.
       margin: 0;
     }
 
-    #canvas-wrapper {
+    #canvas-wrapper,
+    .canvas-wrapper {
       position: relative;
+    }
+
+    #gaze-test-controls {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      z-index: 20;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    #run-label-input {
+      padding: 6px 10px;
+      font-size: 13px;
+      background: rgba(28, 28, 30, 0.9);
+      color: #fff;
+      border: 1px solid #555;
+      border-radius: 6px;
+      width: 180px;
+    }
+
+    #run-label-input::placeholder {
+      color: #888;
+    }
+
+    #start-test-btn {
+      padding: 6px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      background: rgba(28, 28, 30, 0.9);
+      color: #fff;
+      border: 1px solid #555;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+
+    #start-test-btn:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    #gaze-results-panel {
+      position: absolute;
+      bottom: 8px;
+      left: 8px;
+      z-index: 20;
+      background: rgba(0, 0, 0, 0.88);
+      color: #fff;
+      padding: 12px 16px;
+      font-family: monospace;
+      font-size: 13px;
+      border-radius: 8px;
+      border: 1px solid #444;
+      min-width: 260px;
+    }
+
+    #gaze-results-content div {
+      margin-top: 4px;
+      color: #aaffaa;
+    }
+
+    #export-csv-btn {
+      margin-top: 10px;
+      padding: 5px 12px;
+      font-size: 12px;
+      cursor: pointer;
+      background: rgba(44, 44, 46, 0.9);
+      color: #fff;
+      border: 1px solid #555;
+      border-radius: 4px;
+      display: block;
     }
   </style>
 </head>
@@ -43,6 +116,16 @@ limitations under the License.
     <div class="container">
       <div class="canvas-wrapper">
         <canvas id="output"></canvas>
+        <div id="gaze-test-controls">
+          <input id="run-label-input" type="text"
+                 placeholder="Run label (e.g. 640x480-base)" />
+          <button id="start-test-btn">Start Eye Tracking Test</button>
+        </div>
+        <div id="gaze-results-panel" style="display:none;">
+          <strong>Results — <span id="run-label-display"></span></strong>
+          <div id="gaze-results-content"></div>
+          <button id="export-csv-btn">Download CSV</button>
+        </div>
         <video id="video" playsinline style="
           -webkit-transform: scaleX(-1);
           transform: scaleX(-1);

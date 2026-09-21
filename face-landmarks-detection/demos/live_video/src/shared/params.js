@@ -111,6 +111,19 @@ export const MODEL_BACKEND_MAP = {
       ['mediapipe-gpu', 'tfjs-webgl']
 }
 
+export const TEST_CONFIG = {
+  CALIBRATION_POINTS: 9,
+  VALIDATION_POINTS: 5,
+  GRID_MARGIN: 0.10,
+  VALIDATION_MARGIN: 0.15,
+  SETTLE_MS: 500,
+  COLLECT_MS: 1500,
+  TOTAL_TARGET_MS: 2000,
+  IRIS_SUBTEND_DEG: 1.12,
+  DOT_RADIUS: 14,
+  DOT_INNER_RADIUS: 4,
+};
+
 export const TUNABLE_FLAG_NAME_MAP = {
   PROD: 'production mode',
   WEBGL_VERSION: 'webgl version',

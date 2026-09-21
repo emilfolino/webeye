@@ -30,8 +30,9 @@ import {setupDatGui} from './option_panel';
 import {STATE, createDetector} from './shared/params';
 import {setupStats} from './shared/stats_panel';
 import {setBackendAndEnvFlags} from './shared/util';
+import {GazeTest} from './gaze_test';
 
-let detector, camera, stats;
+let detector, camera, stats, gazeTest;
 let startInferenceTime, numInferences = 0;
 let inferenceTimeSum = 0, lastPanelUpdate = 0;
 let rafId;
@@ -129,6 +130,16 @@ async function renderResult() {
     camera.drawResults(
         faces, STATE.modelConfig.triangulateMesh,
         STATE.modelConfig.boundingBox);
+
+    const kp = faces[0].keypoints;
+    if (gazeTest && kp.length > 477) {
+      gazeTest.recordFrame(
+          kp[468], kp[473], (performance || Date).now(), kp);
+    }
+  }
+
+  if (gazeTest) {
+    gazeTest.drawOverlay(camera.ctx, camera.canvas.width, camera.canvas.height);
   }
 }
 
@@ -157,6 +168,43 @@ async function app() {
   detector = await createDetector();
 
   renderPrediction();
+
+  gazeTest = new GazeTest();
+
+  document.getElementById('start-test-btn').addEventListener('click', () => {
+    const label = document.getElementById('run-label-input').value.trim() || 'unnamed';
+    gazeTest.start(camera.canvas.width, camera.canvas.height, label);
+    document.getElementById('gaze-results-panel').style.display = 'none';
+    document.getElementById('start-test-btn').textContent = 'Test Running…';
+    document.getElementById('start-test-btn').disabled = true;
+  });
+
+  document.getElementById('export-csv-btn').addEventListener('click', () => {
+    gazeTest.exportCSV();
+  });
+
+  let lastGazeState = 'idle';
+  setInterval(() => {
+    if (!gazeTest || gazeTest.state === lastGazeState) return;
+    lastGazeState = gazeTest.state;
+    const btn = document.getElementById('start-test-btn');
+    if (gazeTest.state === 'done') {
+      btn.textContent = 'Restart Test';
+      btn.disabled = false;
+      document.getElementById('gaze-results-panel').style.display = 'block';
+      const m = gazeTest.metrics;
+      if (m) {
+        document.getElementById('run-label-display').textContent =
+            gazeTest._runLabel || 'unnamed';
+        document.getElementById('gaze-results-content').innerHTML = [
+          `Mean accuracy: ${m.meanAccuracyPx.toFixed(1)} px / ${m.meanAccuracyDeg.toFixed(2)}°`,
+          `P95 accuracy:  ${m.p95AccuracyPx.toFixed(1)} px / ${m.p95AccuracyDeg.toFixed(2)}°`,
+          `Precision:     ${m.meanPrecisionPx.toFixed(1)} px / ${m.meanPrecisionDeg.toFixed(2)}°`,
+          `Pixels/degree: ${m.pixelsPerDegree.toFixed(1)}`,
+        ].map(l => `<div>${l}</div>`).join('');
+      }
+    }
+  }, 500);
 };
 
 app();
