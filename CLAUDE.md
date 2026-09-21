@@ -6,6 +6,65 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Explore whether higher-definition webcam input and more granular face mesh output can improve webcam-based eye tracking. The `face-landmarks-detection/` directory contains Google's TensorFlow.js face landmark model and demos as a reference and starting point.
 
+## Experiment Tracking
+
+Tag every try/iteration you run so results stay traceable across changes. For each tagged try, record the accuracy and precision measurements so improvements can be compared over time.
+
+## Accuracy & Precision Measurement Harness
+
+The live_video demo has a built-in test harness for measuring eye tracking quality. It lives in `demos/live_video/src/gaze_test.js` and is wired into the rAF loop in `index.js`.
+
+### How to run a test
+
+1. Type a run label in the text field (e.g. `640x480-base`) — this goes into the CSV filename and header.
+2. Click **Start Eye Tracking Test**.
+3. Follow the red dots: 9 calibration targets (3×3 grid, 2s each) then 5 validation targets (cross pattern, 2s each). First 500ms per dot is a settling window; data is collected in the remaining 1500ms.
+4. Results appear as a canvas overlay and in the HTML panel below the button.
+5. Click **Download CSV** to export all raw samples.
+
+### Metrics
+
+| Metric | Definition |
+|--------|------------|
+| **Mean accuracy** | Mean Euclidean distance from predicted gaze to target center, across 5 validation targets |
+| **P95 accuracy** | 95th-percentile per-sample error pooled across all validation samples |
+| **Precision** | RMS spread of predicted gaze samples around their centroid, per target, then averaged |
+
+All metrics are reported in **pixels** and **degrees of visual angle**. Degree conversion uses the iris diameter as a natural ruler: iris ≈ 11.7 mm, subtending ≈ 1.12° at 60 cm → `pixelsPerDegree = irisPixelDiameter / 1.12`, averaged across the whole session.
+
+### Gaze mapping
+
+A second-order polynomial maps mean iris position → screen position:
+
+```
+screenX = a · [1, iX, iY, iX·iY, iX², iY²]
+screenY = b · [1, iX, iY, iX·iY, iX², iY²]
+```
+
+Fitted via normal equations `(AᵀA)x = Aᵀb` (6×6 Gaussian elimination). Mirror correction is applied before fitting: `iXscreen = canvasWidth − mean(leftIris.x, rightIris.x)`.
+
+### CSV format
+
+```
+# run: <label>
+timestamp,leftIrisX,leftIrisY,rightIrisX,rightIrisY,iXscreen,iYscreen,targetX,targetY,phase
+```
+
+`phase` is `calibrating` or `validating`. Calibration rows come first (9 × ~45–90 samples), then validation rows (5 × ~45–90 samples).
+
+### Expected baseline numbers
+
+At 60 cm, 640×480, mediapipe-gpu backend, cooperative user:
+- Mean accuracy: 1–4° (25–100 px)
+- P95 accuracy: 3–7°
+- Precision: 0.3–1°
+
+Accuracy significantly worse than 5° suggests a mirror-correction or mapping failure.
+
+### Key constants (`src/shared/params.js` → `TEST_CONFIG`)
+
+`SETTLE_MS` (500), `COLLECT_MS` (1500), `GRID_MARGIN` (0.10), `VALIDATION_MARGIN` (0.15), `IRIS_SUBTEND_DEG` (1.12).
+
 ## Running the Demo
 
 ```bash
