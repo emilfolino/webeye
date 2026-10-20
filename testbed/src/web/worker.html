@@ -1,0 +1,8 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>WebEye landmark worker</title>
+<body style="font:14px monospace;background:#111;color:#ddd;padding:1em">
+<h3>Landmark worker</h3>
+<p>Polls the local server for landmark jobs, runs the model on the (pre-processed) recorded frames and posts results. Leave open until the queue is empty. For comparable timing, keep this tab in the foreground.</p>
+<pre id="log"></pre>
+<script type="module" src="/web/worker.js"></script>

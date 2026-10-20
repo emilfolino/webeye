@@ -1,0 +1,40 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>WebEye recorder</title>
+<style>
+ body{font:15px system-ui;margin:0;background:#fafafa;color:#111}
+ #setup{max-width:760px;margin:2em auto;padding:0 1em}
+ label{display:block;margin:.6em 0 .2em}
+ input,select{font:inherit;padding:.25em;width:100%;box-sizing:border-box}
+ .row{display:flex;gap:1em}.row>*{flex:1}
+ button{font:inherit;padding:.5em 1em;margin:.5em .5em .5em 0}
+ #stim{display:none;position:fixed;inset:0;background:#808080;cursor:none}
+ #overlay{display:none;position:fixed;inset:0;align-items:center;justify-content:center;color:#fff;font:28px system-ui;text-align:center;padding:2em;white-space:pre-wrap}
+ #hud{position:fixed;left:6px;bottom:4px;font:11px monospace;color:#333;display:none}
+ .cam{border:1px solid #ccc;padding:.5em;margin:.5em 0;background:#fff}
+ video{width:200px;display:block}
+ #status{font:12px monospace;white-space:pre}
+</style>
+<div id="setup">
+ <h2>WebEye recording session</h2>
+ <div class="row"><div><label>Participant pseudonym (no real names)</label><input id="pid" placeholder="P001"></div>
+ <div><label>Participant index (counterbalancing, 0,1,2,...)</label><input id="pidx" type="number" value="0"></div></div>
+ <div class="row"><div><label>Screen width (mm, measured visible area)</label><input id="wmm" type="number" value="527"></div>
+ <div><label>Screen height (mm)</label><input id="hmm" type="number" value="296"></div></div>
+ <div class="row"><div><label>Protocol</label><select id="protocol"></select></div>
+ <div><label>Frame format</label><select id="fmt"><option value="jpeg95">JPEG q0.95</option><option value="png">PNG (lossless, large)</option></select></div></div>
+ <fieldset><legend>Consent (recorded in the manifest)</legend>
+  <label><input type="checkbox" id="c-study" style="width:auto"> Participated with informed consent</label>
+  <label><input type="checkbox" id="c-raw" style="width:auto"> Raw face video may be released with the dataset (opt-in)</label>
+  <label><input type="checkbox" id="c-derived" style="width:auto" checked> Derived (landmark) data may be released</label></fieldset>
+ <div id="cams"></div>
+ <button id="addcam">Add camera</button><button id="refresh">Refresh devices</button>
+ <label><input type="checkbox" id="live" style="width:auto"> Also run the model live on the first camera (fidelity pilot)</label>
+ <label><input type="checkbox" id="usegp3" style="width:auto"> Record GP3 via server bridge</label>
+ <p><button id="start" style="font-size:1.2em">Start session (fullscreen)</button></p>
+ <div id="status"></div>
+</div>
+<canvas id="stim"></canvas>
+<div id="overlay"></div>
+<div id="hud"></div>
+<script type="module" src="/web/recorder.js"></script>
