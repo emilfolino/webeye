@@ -1,0 +1,9 @@
+# Participant data is never committed (face video = biometric data).
+data/
+cache/
+*.log
+__pycache__/
+.venv/
+results/
+node_modules/
+.pytest_cache/

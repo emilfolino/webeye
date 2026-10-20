@@ -1,0 +1,19 @@
+{
+  "name": "webeye-testbed",
+  "version": "0.1.0",
+  "description": "Record-once / replay-many testbed for webcam eye tracking studies",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test test/",
+    "serve": "node bin/serve.js",
+    "replay": "node bin/replay.js",
+    "simulate": "node bin/simulate.js",
+    "validate": "node bin/validate-session.js",
+    "compare-live-replay": "node bin/compare-live-replay.js",
+    "test:py": "python3 -m pytest -q analysis"
+  }
+}
