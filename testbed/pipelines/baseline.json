@@ -1,0 +1,9 @@
+{
+  "tag": "v001-baseline",
+  "description": "Current harness equivalent: MediaPipe + refineLandmarks, iris-mean features, poly2, 640x480 input",
+  "camera": "cam4k",
+  "preprocess": {"resize": [640, 480]},
+  "model": {"runtime": "mediapipe", "refineLandmarks": true},
+  "features": {"type": "iris-mean"},
+  "mapping": {"type": "poly", "degree": 2, "lambda": 0.001}
+}

@@ -1,0 +1,14 @@
+{
+  "tagPrefix": "res",
+  "description": "Input-resolution sweep (confirmatory factor 1)",
+  "base": {"camera": "cam4k", "model": {"runtime": "mediapipe", "refineLandmarks": true}, "features": {"type": "iris-eye-mean"}},
+  "factors": {
+    "preprocess.resize": [
+      {"label": "2160p", "value": null},
+      {"label": "1080p", "value": [1920, 1080]},
+      {"label": "720p", "value": [1280, 720]},
+      {"label": "480p", "value": [640, 480]},
+      {"label": "360p", "value": [640, 360]}
+    ]
+  }
+}

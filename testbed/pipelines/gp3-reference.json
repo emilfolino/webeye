@@ -1,0 +1,5 @@
+{
+  "tag": "ref-gp3",
+  "description": "Gazepoint GP3 benchmark (noise floor), evaluated with the same metrics",
+  "model": {"runtime": "gp3"}
+}
