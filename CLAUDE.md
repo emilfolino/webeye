@@ -106,7 +106,7 @@ Two runtimes share the same public API:
 
 Each runtime lives in its own folder (`src/mediapipe/`, `src/tfjs/`) with a `detector.ts`, `types.ts`, `constants.ts`, and `detector_utils.ts`.
 
-**Keypoints:** The base model outputs **468** face mesh keypoints. Enabling `refineLandmarks: true` adds **10 iris keypoints** (indices 468–472 = left iris center + 4 cardinal points; 473–477 = right iris). The `x/y` values are pixel-space; `z` is depth relative to head center (negative = closer to camera), roughly same scale as `x`.
+**Keypoints:** The base model outputs **468** face mesh keypoints. Enabling `refineLandmarks: true` adds **10 iris keypoints** (indices 468–472 = **right** iris (image-left when unmirrored; corners 33/133) center + 4 cardinal points; 473–477 = **left** iris (corners 263/362), per `src/constants.ts`). The `x/y` values are pixel-space; `z` is depth relative to head center (negative = closer to camera), roughly same scale as `x`.
 
 Named contour groups (lips, leftEye, leftEyebrow, leftIris, rightEye, rightEyebrow, rightIris, faceOval) are defined in `src/constants.ts` and exposed via `util.getKeypointIndexByContour()`.
 
@@ -124,4 +124,15 @@ Named contour groups (lips, leftEye, leftEyebrow, leftIris, rightEye, rightEyebr
 - Camera setup in `camera.js` passes `width/height` as ideal constraints; actual resolution depends on the hardware and browser granting it.
 - Mobile devices are hard-capped at `360×270` by `isMobile()` in `util.js`.
 - `refineLandmarks: true` must be set to get iris keypoints; the mediapipe runtime calls this `refineLandmarks`, the tfjs runtime calls it `withAttention` internally.
-- `staticImageMode: false` (default for video) means the model tracks after the first detection frame instead of re-detecting every frame — lower latency but can lose lock.
+- `staticImageMode: false` (default for video) means the model tracks after the first detection frame instead of re-detecting every frame — lower latency but can lose lock. NOTE: the `mediapipe` runtime ignores `staticImageMode` (see `src/mediapipe/detector.ts`); only the `tfjs` runtime honours it, so replay-from-stored-frames must be checked against live tracking (`testbed/bin/compare-live-replay.js`).
+
+## Testbed (`testbed/`)
+
+Record-once / replay-many testbed for the CHI study; design in `PLAN.md`, usage in `testbed/README.md` and `testbed/docs/`. Zero-dependency Node (>= 20) + ffmpeg; Python only for `testbed/analysis/`.
+
+- Run tests: `cd testbed && npm test` (Node) and `python3 -m pytest -q analysis` (needs pandas, statsmodels, matplotlib, pytest).
+- `node bin/serve.js` starts the local recorder/worker server; `bin/replay.js` runs pipeline specs (`pipelines/*.json`) over recorded sessions; `bin/simulate.js` makes synthetic sessions with known ground truth (machinery validation only, not evidence about real webcams).
+- Every spec has a `tag`; every replay appends accuracy/precision per tag to `testbed/experiments/registry.csv`. Landmarks are cached per (session, camera, preprocess, model), so only model/preprocess changes need the browser worker.
+- Hold-out: `dev`/`confirm` split by salted hash of the participant pseudonym; `replay.js` refuses `confirm` data unless every spec is `"frozen": true`. Never tune on `confirm`.
+- `testbed/data/` holds participant face video (biometric): gitignored, never commit or upload it.
+- Untested against real hardware: GP3 bridge (fake TCP server only), real 4K/low-res cameras, native ffmpeg capture. Browser recorder and worker were exercised only with chromium headless and a fake camera.
