@@ -19,7 +19,7 @@
  <h2>WebEye recording session</h2>
  <div class="row"><div><label>Participant pseudonym (no real names)</label><input id="pid" placeholder="P001"></div>
  <div><label>Participant index (counterbalancing, 0,1,2,...)</label><input id="pidx" type="number" value="0"></div></div>
- <p>Screen size is measured at the start of the session by matching an on-screen rectangle to a bank/ID card (85.6 mm wide).</p>
+ <p>Screen size is detected from the monitor (Linux EDID) at the start of the session; if that is unavailable or rejected, match an on-screen rectangle to a bank/ID card (85.6 mm wide).</p>
  <div class="row"><div><label>Protocol</label><select id="protocol"></select></div>
  <div><label>Frame format</label><select id="fmt"><option value="jpeg95">JPEG q0.95</option><option value="png">PNG (lossless, large)</option></select></div></div>
  <fieldset><legend>Consent (recorded in the manifest)</legend>

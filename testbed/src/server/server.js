@@ -7,6 +7,7 @@ import {join, extname, normalize, resolve, sep} from 'node:path';
 import {loadSession} from '../engine/session.js';
 import {ensurePreprocessed} from '../engine/preprocess.js';
 import {Gp3Bridge} from './gp3_bridge.js';
+import {detectScreens} from './screens.js';
 
 const SAFE = /^[A-Za-z0-9._-]+$/;
 const MIME = {'.html': 'text/html', '.js': 'text/javascript', '.json': 'application/json', '.css': 'text/css',
@@ -70,6 +71,8 @@ export function createStudyServer({dataDir, webRoot, sharedRoot, protocolsRoot =
     let m;
 
     if (req.method === 'GET' && p === '/api/clock') return json(res, 200, {t: now()});
+
+    if (req.method === 'GET' && p === '/api/screens') return json(res, 200, {platform: process.platform, screens: detectScreens()});
 
     if (req.method === 'GET' && p === '/api/gp3/status') {
       const st = gp3State.bridge?.stats;

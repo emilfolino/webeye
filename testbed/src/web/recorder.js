@@ -41,6 +41,33 @@ addCam('camlow', 640, 480, 30);
 if (devices.length > 1) document.querySelectorAll('select.dev')[1].selectedIndex = 1;
 
 
+
+// ---------- screen size: EDID detected by the server ----------
+// Use the detection only when the connected monitors matching this screen's
+// physical pixel size agree on their mm size; otherwise fall back to the card.
+async function detectedScreen(dpr) {
+  try {
+    const {screens} = await (await api('/api/screens')).json();
+    const pw = Math.round(window.screen.width * dpr), ph = Math.round(window.screen.height * dpr);
+    const hits = screens.filter(m => m.hres === pw && m.vres === ph);
+    // identical monitors (same pixels and mm) are not ambiguous
+    return hits.length && hits.every(h => h.widthMm === hits[0].widthMm && h.heightMm === hits[0].heightMm) ? hits[0] : null;
+  } catch { return null; }
+}
+function confirmDetected(ctx, W, H, det) {
+  return new Promise(res => {
+    ctx.fillStyle = '#808080'; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#000'; ctx.font = '24px system-ui'; ctx.textAlign = 'center';
+    ctx.fillText(`Detected screen: ${det.name || det.connector}, ${det.widthMm} x ${det.heightMm} mm (${det.source})`, W / 2, H / 2 - 20);
+    ctx.fillText('Enter = accept     C = measure with a card instead', W / 2, H / 2 + 20);
+    const onKey = e => {
+      if (e.code === 'Enter') { removeEventListener('keydown', onKey); res(true); }
+      else if (e.code === 'KeyC') { removeEventListener('keydown', onKey); res(false); }
+    };
+    addEventListener('keydown', onKey);
+  });
+}
+
 // ---------- screen size: credit-card calibration ----------
 // Browsers cannot report physical screen size. The participant (or operator)
 // holds an ISO ID-1 card (85.60 x 53.98 mm; bank card, ID, driving licence)
@@ -135,9 +162,18 @@ async function run() {
   const W = window.innerWidth, H = window.innerHeight;
   canvas.width = W * dpr; canvas.height = H * dpr; canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
   const ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr);
-  const cal = await calibrateScreen(ctx, W, H);
-  const screenInfo = {widthPx: W, heightPx: H, widthMm: cal.widthMm, heightMm: cal.heightMm, pixelRatio: dpr,
-    sizeMethod: 'card', cardPx: cal.cardPx, mmPerPx: cal.mmPerPx};
+  const det = await detectedScreen(dpr);
+  let screenInfo;
+  if (det && await confirmDetected(ctx, W, H, det)) {
+    // EDID gives the full panel; fullscreen covers it, scale if the viewport is smaller.
+    const k = W / window.screen.width;
+    screenInfo = {widthPx: W, heightPx: H, widthMm: Math.round(det.widthMm * k * 10) / 10, heightMm: Math.round(det.heightMm * (H / window.screen.height) * 10) / 10,
+      pixelRatio: dpr, sizeMethod: det.source, monitor: det.name || det.connector};
+  } else {
+    const cal = await calibrateScreen(ctx, W, H);
+    screenInfo = {widthPx: W, heightPx: H, widthMm: cal.widthMm, heightMm: cal.heightMm, pixelRatio: dpr,
+      sizeMethod: 'card', cardPx: cal.cardPx, mmPerPx: cal.mmPerPx};
+  }
 
   const sessionId = `${pid}-${new Date().toISOString().replace(/[:.]/g, '-')}`;
   const fmt = $('fmt').value;
