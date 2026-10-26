@@ -29,10 +29,12 @@ export function loadSession(dir) {
   const events = readJsonl(join(dir, 'events.jsonl'));
   const cameras = {};
   for (const cam of manifest.cameras || []) {
-    cameras[cam.id] = {
-      ...cam, dir: join(dir, 'cameras', cam.id),
-      frames: readJsonl(join(dir, 'cameras', cam.id, 'frames.jsonl')),
-    };
+    // Concurrent frame uploads can be indexed out of order; order by capture time (stable, keeps i).
+    const frames = readJsonl(join(dir, 'cameras', cam.id, 'frames.jsonl'));
+    let reordered = 0;
+    for (let i = 1; i < frames.length; i++) if (frames[i].t < frames[i - 1].t) reordered++;
+    if (reordered) frames.sort((a, b) => a.t - b.t);
+    cameras[cam.id] = {...cam, dir: join(dir, 'cameras', cam.id), frames, reordered};
   }
   return {
     dir, manifest, events, cameras,

@@ -1,0 +1,2 @@
+tag,spec_hash,date,code_commit,dirty,dataset,split,n_participants,n_sessions,mean_accuracy_deg,mean_p95_err_deg,mean_precision_sd_deg,mean_precision_rms_s2s_deg,mean_loss,notes
+v001-baseline,64d50473b8e5,2026-10-26,1e99dd6,0,7638fe7420,dev,1,1,23.600647,40.661738,5.500315,3.171865,0,"Current harness equivalent: MediaPipe + refineLandmarks, iris-mean features, poly2, 640x480 input"

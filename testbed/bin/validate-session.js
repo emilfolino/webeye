@@ -23,6 +23,7 @@ for (const dir of process.argv.slice(2)) {
     let nonMono = 0, missing = 0;
     for (let i = 1; i < f.length; i++) if (f[i].t <= f[i - 1].t) nonMono++;
     if (!m.simulated) for (const fr of f.slice(0, 50)) if (!existsSync(join(cam.dir, 'frames', fr.file))) missing++;
+    if (cam.reordered) warns.push(`${id}: ${cam.reordered} frame(s) were indexed out of order (sorted by time)`);
     if (nonMono) errs.push(`${id}: ${nonMono} non-monotonic frame timestamps`);
     if (missing) errs.push(`${id}: frame files missing`);
     const dts = f.slice(1).map((x, i) => x.t - f[i].t).sort((a, b) => a - b);
