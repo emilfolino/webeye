@@ -1,0 +1,25 @@
+{
+ "name": "webeye-quick",
+ "version": "1.0.0",
+ "seed": 20280102,
+ "description": "Short smoke-test protocol (~1 min): 9 calibration dots, 8 validation dots, 8 s pursuit, one block. Not for the study. Replay with calibration.subset 'all' or '25' (both mean every calibration point).",
+ "timing": {"settleMs": 500, "collectMs": 1000, "pursuitMs": 8000, "headMoveMs": 6000},
+ "pointSets": {
+  "cal9": {"type": "grid", "rows": 3, "cols": 3, "margin": 0.1},
+  "val8": {"type": "jitter", "n": 8, "margin": 0.12, "minSep": 0.2, "avoid": "cal9", "avoidDist": 0.1}
+ },
+ "stepTemplates": {
+  "quick": [
+   {"kind": "instruction", "text": "Keep your head still and look at each red dot until it moves."},
+   {"kind": "sync", "durationMs": 1000},
+   {"kind": "fixation", "role": "calibration", "set": "cal9", "order": "random"},
+   {"kind": "fixation", "role": "validation", "set": "val8", "rep": 1, "order": "random"},
+   {"kind": "instruction", "text": "Now follow the moving dot with your eyes."},
+   {"kind": "pursuit", "role": "pursuit", "path": {"type": "lissajous", "ax": 0.38, "ay": 0.35, "fx": 0.1, "fy": 0.15, "phase": 0}},
+   {"kind": "sync", "durationMs": 1000}
+  ]
+ },
+ "blocks": [
+  {"id": "quick-60", "position": "first", "counterbalance": false, "condition": {"lighting": "normal", "distance_cm": 60}, "steps": "quick"}
+ ]
+}

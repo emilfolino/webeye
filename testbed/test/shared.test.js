@@ -93,3 +93,14 @@ test('ScreenGeometry: ray angles', () => {
   assert.ok(g.angleBetween([900, 250], [900 + px, 250]) < 1);
   assert.ok(Math.abs(g.pixelsPerDegreeAtCentre() - 600 * Math.tan(Math.PI / 180) / 0.5) < 0.5);
 });
+
+test('quick protocol yields calibration, validation and pursuit steps', async () => {
+  const {readFileSync} = await import('node:fs');
+  const {buildSchedule} = await import('../src/shared/protocol.js');
+  const p = JSON.parse(readFileSync(new URL('../protocols/webeye-quick.protocol.json', import.meta.url), 'utf8'));
+  const s = buildSchedule(p, {width: 1920, height: 1080}, 0);
+  const roles = r => s.filter(x => x.role === r).length;
+  assert.equal(roles('calibration'), 9);
+  assert.equal(roles('validation'), 8);
+  assert.equal(roles('pursuit'), 1);
+});
