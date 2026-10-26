@@ -27,3 +27,13 @@ For a more granular approach, crop and affine-warp the eye region from the full 
 ## 7. Remove the mobile hard-cap or make it configurable
 
 `isMobile()` in `util.js` silently caps resolution to 360×270 on phones. If testing on a mobile device, this needs to be lifted or made an opt-in override via a URL parameter.
+
+## 8. Pupil dilation (pupil size) for the final model
+
+Add a calibrated pupil-diameter signal to the final model. It is valuable on its own (cognitive load, arousal) and as a covariate for gaze (pupil-centre shift). Notes for whoever picks this up:
+
+- The mesh's iris ring is the limbus (iris ≈ 11.7 mm, nearly constant), not the pupil. Measure the *pupil* inside it and report `pupilDiameter = irisDiameterMm · pupilPx / irisPx`, so the iris is the ruler and no camera calibration is needed.
+- Needs enough pixels across the iris (~100 px at 1080p, 60 cm; only ~35 px at 640×480). Do it on the full-resolution eye crop (see item 6), not on the 192×192 face-mesh input.
+- Ground truth: the Gazepoint GP3 reports pupil diameter (`PUPIL_*`, already enabled in `testbed/src/server/gp3_bridge.js`), so the testbed can score it like gaze.
+- Confounds to control or model: screen luminance (the pupillary light reflex), viewing distance, gaze angle (foreshortening of the pupil ellipse), eyelid occlusion and eye colour/contrast (dark brown irises hide the pupil in visible light).
+- Report as a new metric next to accuracy/precision (e.g. pupil error in mm and correlation with GP3 over time), with its own pipeline tag.

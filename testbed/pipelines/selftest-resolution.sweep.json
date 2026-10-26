@@ -1,0 +1,13 @@
+{
+  "tagPrefix": "selfres",
+  "description": "Input-resolution sweep on one dev self-test session (smoke test): StreamCam tops out at 1080p, no 2160p level",
+  "base": {"camera": "cam4k", "model": {"runtime": "mediapipe", "refineLandmarks": true}, "features": {"type": "iris-eye-mean", "headPose": true}, "mapping": {"type": "poly", "degree": 2, "lambda": 0.001}},
+  "factors": {
+    "preprocess.resize": [
+      {"label": "1080p", "value": [1920, 1080]},
+      {"label": "720p", "value": [1280, 720]},
+      {"label": "480p", "value": [640, 480]},
+      {"label": "360p", "value": [640, 360]}
+    ]
+  }
+}

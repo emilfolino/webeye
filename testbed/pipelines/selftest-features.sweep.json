@@ -1,0 +1,14 @@
+{
+  "tagPrefix": "feat",
+  "description": "Feature sweep on a single dev self-test session (smoke test, not evidence): is the 38 deg baseline error a feature/head-pose problem?",
+  "base": {"camera": "cam4k", "preprocess": {"resize": [640, 480]}, "model": {"runtime": "mediapipe", "refineLandmarks": true}, "mapping": {"type": "poly", "degree": 2, "lambda": 0.001}},
+  "factors": {
+    "features": [
+      {"label": "irismean", "value": {"type": "iris-mean"}},
+      {"label": "eyemean", "value": {"type": "iris-eye-mean"}},
+      {"label": "eyemean-hp", "value": {"type": "iris-eye-mean", "headPose": true}},
+      {"label": "eye-hp", "value": {"type": "iris-eye", "headPose": true}},
+      {"label": "eyemean-z-hp", "value": {"type": "iris-eye-mean", "useZ": true, "headPose": true}}
+    ]
+  }
+}
