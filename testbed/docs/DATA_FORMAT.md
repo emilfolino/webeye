@@ -12,9 +12,11 @@
 
 **Time**: every `t` is browser `performance.now()` in ms; frame `t` is the camera capture time when the browser exposes it (`requestVideoFrameCallback`). `clock_sync` events `{t, t1, serverT}` map browser to server time; GP3 `time` is mapped to server time by regression over the per-sample `rx` stamps (`src/engine/sync.js`).
 
-**Events**: `session_start`, `block_start {blockId, condition, calibrationFrom}`, `block_measure {distance_cm}`, `instruction`, `sync`, `target_on {id, x, y, nx, ny, role, set, rep, index, subsets, settleMs, collectMs}` / `target_off {id}`, `pursuit_on {path, durationMs}` / `pursuit_off`, `gp3_marker`, `session_end {aborted}`. Target ids are `block:role:set:rep:index`.
+**Events**: `session_start`, `block_start {blockId, condition, calibrationFrom}`, `block_measure {distance_cm}` (optional; no longer written by the recorder), `instruction`, `sync`, `target_on {id, x, y, nx, ny, role, set, rep, index, subsets, settleMs, collectMs}` / `target_off {id}`, `pursuit_on {path, durationMs}` / `pursuit_off`, `gp3_marker`, `session_end {aborted}`. Target ids are `block:role:set:rep:index`.
 
 **Landmark record**: `{i, t, ok, ms, kp}`; `kp` is the stored keypoint subset (`src/shared/keypoints.js`, header field `subset` lists mesh indices) as `[x, y, z]` in pixels of the (preprocessed) frame, **unmirrored**. Mesh index convention: 468-472 is the subject's **right** iris (image left; corners 33/133), 473-477 the left iris (263/362).
+
+**Distance**: `qc.json` reports per block the distance used, its source (`measured`/`iris`/`nominal`) and the iris-based estimate. Manifest `startDistanceCm` (optional) rescales iris estimates; camera entries carry `dfovDeg` (datasheet) and `hfovDeg` (derived).
 
 **Cache keys**: `landmarkKey` = hash(camera, preprocess, model); `specHash` = hash of the whole spec except tag/description/frozen (`src/engine/spec.js`).
 

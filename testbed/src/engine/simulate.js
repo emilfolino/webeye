@@ -192,6 +192,7 @@ export function simulateLandmarks(sim, spec, {
     const yaw = (isHead ? subj.headMoveAmp : subj.headMoveAmp * 0.1) * Math.sin(2 * Math.PI * 0.2 * phase);
     const dxHead = yaw * w * headYawSensitivity;
     const dyHead = (isHead ? subj.headMoveAmp : subj.headMoveAmp * 0.1) * h * Math.sin(2 * Math.PI * 0.15 * phase + 1);
+    const focalPx = (w / 2) / Math.tan((cam.hfovDeg || 78) * Math.PI / 360);
     const iod = 0.13 * w * (600 / dMm) * (1 + 0.02 * Math.sin(phase));
     const ew = 0.38 * iod;
     const cx = w / 2 + dxHead, cy = h / 2 + dyHead;
@@ -216,7 +217,7 @@ export function simulateLandmarks(sim, spec, {
       place(eye.top3, ecx + ew * 0.15, ecy - open * ew * 0.9);
       place(eye.bottom3, ecx + ew * 0.15, ecy + open * ew * 0.9);
       const ix = ecx + offX * ew, iy = ecy + offY * ew;
-      const r = 0.19 * ew;  // iris radius ~ 11.7mm/2 relative to eye width ~ 30mm
+      const r = 0.5 * 11.7 * focalPx / dMm;  // true iris size (11.7 mm) at this distance
       place(iris[0], ix, iy);
       place(iris[1], ix + r, iy); place(iris[2], ix, iy - r);
       place(iris[3], ix - r, iy); place(iris[4], ix, iy + r);

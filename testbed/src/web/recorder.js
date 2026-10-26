@@ -27,7 +27,7 @@ function addCam(id = '', w = 1920, h = 1080, fps = 30) {
    <div class="row"><div><label>Width</label><input class="cw" type="number" value="${w}"></div>
    <div><label>Height</label><input class="ch" type="number" value="${h}"></div>
    <div><label>FPS</label><input class="cf" type="number" value="${fps}"></div>
-   <div><label>HFOV deg (datasheet)</label><input class="cfov" type="number" value="78"></div></div>
+   <div><label>Diagonal FOV deg (datasheet)</label><input class="cfov" type="number" value="90"></div></div>
    <video muted playsinline></video><button class="rm">remove</button>`;
   fillDevices(div.querySelector('.dev'));
   div.querySelector('.rm').onclick = () => div.remove();
@@ -138,7 +138,7 @@ async function run() {
   const camCfgs = [...document.querySelectorAll('.cam')].map(d => ({
     id: d.querySelector('.cid').value.trim(), deviceId: d.querySelector('.dev').value,
     w: +d.querySelector('.cw').value, h: +d.querySelector('.ch').value, fps: +d.querySelector('.cf').value,
-    hfovDeg: +d.querySelector('.cfov').value, video: d.querySelector('video'),
+    dfovDeg: +d.querySelector('.cfov').value, video: d.querySelector('video'),
   }));
   if (!camCfgs.length) { status('Add at least one camera.'); return; }
   const protocol = await (await api(`/protocols/${$('protocol').value}`)).json();
@@ -151,6 +151,9 @@ async function run() {
     const s = c.stream.getVideoTracks()[0].getSettings();
     c.granted = {w: c.video.videoWidth, h: c.video.videoHeight, fps: s.frameRate};
     c.label = c.stream.getVideoTracks()[0].label;
+    // datasheets give the diagonal FOV; convert to horizontal for the granted aspect ratio
+    const {w: gw, h: gh} = c.granted;
+    c.hfovDeg = Math.round(2 * Math.atan(Math.tan(c.dfovDeg * Math.PI / 360) * gw / Math.hypot(gw, gh)) * 18000 / Math.PI) / 100;
   }
 
   await document.documentElement.requestFullscreen?.().catch(() => {});
@@ -181,8 +184,8 @@ async function run() {
     sessionId, participant: {id: pid, index: +$('pidx').value}, protocol: {name: protocol.name, version: protocol.version},
     screen: screenInfo, userAgent: navigator.userAgent, startedAt: new Date().toISOString(),
     consent: {study: true, rawVideoRelease: $('c-raw').checked, derivedRelease: $('c-derived').checked},
-    gp3: {present: $('usegp3').checked}, subsetIndices: KEYPOINT_SUBSET,
-    cameras: camCfgs.map(c => ({id: c.id, label: c.label, requested: {w: c.w, h: c.h, fps: c.fps}, granted: c.granted, hfovDeg: c.hfovDeg, frameFormat: fmt === 'png' ? 'png' : 'jpeg95'})),
+    gp3: {present: $('usegp3').checked}, startDistanceCm: +$('startdist').value || undefined, subsetIndices: KEYPOINT_SUBSET,
+    cameras: camCfgs.map(c => ({id: c.id, label: c.label, requested: {w: c.w, h: c.h, fps: c.fps}, granted: c.granted, dfovDeg: c.dfovDeg, hfovDeg: c.hfovDeg, frameFormat: fmt === 'png' ? 'png' : 'jpeg95'})),
   };
   const created = await api('/api/sessions', {method: 'POST', body: JSON.stringify(manifest)});
   if (!created.ok) throw new Error(`session create failed: ${created.status}`);
@@ -255,12 +258,6 @@ async function run() {
     ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x, y, 3, 0, 7); ctx.fill();
   };
   const waitKey = key => new Promise(res => { const h = e => { if (e.code === key) { removeEventListener('keydown', h); res(); } }; addEventListener('keydown', h); });
-  const askNumber = prompt => new Promise(res => {
-    showText(''); overlay.style.display = 'flex'; overlay.innerHTML = '';
-    const d = document.createElement('div'); d.textContent = prompt; const i = document.createElement('input');
-    i.type = 'number'; i.style.cssText = 'font:28px system-ui;width:6em;margin-left:1em'; d.appendChild(i); overlay.appendChild(d); i.focus();
-    i.onkeydown = e => { if (e.key === 'Enter' && +i.value > 0) { overlay.style.display = 'none'; overlay.innerHTML = ''; res(+i.value); } };
-  });
   let aborted = false;
   addEventListener('keydown', e => { if (e.code === 'Escape' && e.shiftKey) aborted = true; });
   const frameWait = () => new Promise(r => requestAnimationFrame(r));
@@ -280,7 +277,6 @@ async function run() {
       const nominal = s.condition?.distance_cm;
       showText(`Next block: ${s.blockId}\n${nominal ? `Sit about ${nominal} cm from the screen.` : ''}\nPress SPACE when ready.`);
       await waitKey('Space');
-      if (nominal) { const d = await askNumber('Measured eye-to-screen distance (cm):'); ev({type: 'block_measure', blockId: s.blockId, distance_cm: d}); }
       showText('');
     } else if (s.type === 'instruction') {
       ev({type: 'instruction', text: s.text}); showText(`${s.text}\n\nPress SPACE.`); await waitKey('Space'); showText('');

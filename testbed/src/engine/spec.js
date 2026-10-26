@@ -22,6 +22,7 @@ export const SPEC_DEFAULTS = {
   mapping: {type: 'poly', degree: 2, lambda: 1e-3},
   filter: {type: 'none'},
   calibration: {subset: '25', aggregate: 'samples'},
+  geometry: {distance: 'auto'},  // auto (measured > iris > nominal) | measured | iris
   gating: {blinkEar: 0.12, gp3: null},
   window: {settleMs: null, collectMs: null},
   evaluation: 'heldout',   // heldout | cv (leave-one-target-out on calibration)

@@ -11,7 +11,7 @@ import {gp3At} from './gp3.js';
 import {hasLandmarks, readLandmarks} from './landmarks.js';
 import {landmarkKey, normaliseSpec, specHash} from './spec.js';
 import {mean, median, quantile} from './stats.js';
-import {distanceFromIris} from '../shared/geometry.js';
+import {makeDistanceResolver} from './distance.js';
 
 const GAP_RESET_MS = 250;
 
@@ -133,18 +133,12 @@ export function runPipeline(session, specIn) {
   const hash = specHash(spec);
   const screen = session.manifest.screen;
   const geomCache = new Map();
-  const blockDistanceMm = id => {
-    const b = session.timeline.blocks.get(id);
-    const cm = b?.distanceCmMeasured ?? b?.condition?.distance_cm ?? session.manifest.viewingDistanceCm;
-    if (!cm) throw new Error(`No viewing distance for block ${id}`);
-    return cm * 10;
-  };
+  const {frames, meta, reference} = buildFrames(session, spec);
+  const dist = makeDistanceResolver(session, spec, frames, meta, reference);
   const geomFor = id => {
-    if (!geomCache.has(id)) geomCache.set(id, new ScreenGeometry(screen, blockDistanceMm(id)));
+    if (!geomCache.has(id)) geomCache.set(id, new ScreenGeometry(screen, dist.mm(id)));
     return geomCache.get(id);
   };
-
-  const {frames, meta, reference} = buildFrames(session, spec);
   const blockList = [...session.timeline.blocks.values()].sort((a, b) => a.t - b.t);
   const base = {
     session: session.manifest.sessionId, participant: session.manifest.participant.id,
@@ -272,14 +266,7 @@ export function runPipeline(session, specIn) {
   // Session-level QC.
   const qc = {session: base.session, tag: spec.tag, spec_hash: hash,
     gp3: session.gp3?.quality ?? null, calibration: Object.fromEntries(calibInfo)};
-  const hfov = session.cameras[spec.camera]?.hfovDeg;
-  if (!reference && hfov && meta.w) {
-    qc.irisDistanceCm = {};
-    for (const b of blockList) {
-      const px = frames.filter(f => f.ok && f.t >= b.t).slice(0, 300).map(f => f.irisPx).filter(Number.isFinite);
-      if (px.length) qc.irisDistanceCm[b.id] = distanceFromIris(median(px), meta.w, hfov) / 10;
-    }
-  }
+  qc.distance = Object.fromEntries(blockList.map(b => [b.id, {cm: dist.mm(b.id) / 10, source: dist.source(b.id), irisCm: dist.irisCm[b.id]}]));
   return {rows, qc, spec, specHash: hash};
 }
 
@@ -287,13 +274,10 @@ export function runPipeline(session, specIn) {
 export function runCv(session, specIn) {
   const spec = normaliseSpec(specIn);
   if (spec.model.runtime === 'gp3') throw new Error('cv not defined for gp3 reference');
-  const {frames} = buildFrames(session, spec);
+  const {frames, meta, reference} = buildFrames(session, spec);
   const rows = [];
-  const geomFor = id => {
-    const b = session.timeline.blocks.get(id);
-    const cm = b?.distanceCmMeasured ?? b?.condition?.distance_cm;
-    return new ScreenGeometry(session.manifest.screen, cm * 10);
-  };
+  const dist = makeDistanceResolver(session, spec, frames, meta, reference);
+  const geomFor = id => new ScreenGeometry(session.manifest.screen, dist.mm(id));
   for (const b of session.timeline.blocks.values()) {
     if (b.calibrationFrom) continue;
     const stats = {total: 0, rejected: 0};

@@ -38,7 +38,8 @@ for (const dir of process.argv.slice(2)) {
   }
   const nBlocks = s.timeline.blocks.size;
   if (!nBlocks) errs.push('no blocks');
-  for (const b of s.timeline.blocks.values()) if (b.condition?.distance_cm && b.distanceCmMeasured == null) errs.push(`block ${b.id}: no measured distance`);
+  if (![...s.timeline.blocks.values()].every(b => b.distanceCmMeasured != null) && !Object.values(s.cameras).some(c => c.hfovDeg)) errs.push('no measured distance and no camera FOV: viewing distance cannot be estimated');
+  if (!m.startDistanceCm && ![...s.timeline.blocks.values()].every(b => b.distanceCmMeasured != null)) warns.push('automatic distance is scaled by the nominal camera FOV only (no startDistanceCm); absolute error maybe ~10%');
   if (!s.timeline.targets.length) errs.push('no stimulus intervals');
   const pings = s.events.filter(e => e.type === 'clock_sync').length;
   if (pings < 10) warns.push(`only ${pings} clock_sync pings`);

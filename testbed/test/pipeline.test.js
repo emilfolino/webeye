@@ -98,3 +98,28 @@ test('leave-one-target-out CV runs on calibration targets', () => {
   assert.ok(rows.length >= 4 * 20);
   assert.ok(meanOf(rows, 'accuracy_deg') < 1.5);
 });
+
+test('distance from iris size recovers the true block distance when no measurement exists', async () => {
+  const {readFileSync, writeFileSync} = await import('node:fs');
+  const {join} = await import('node:path');
+  const {simulateSession, simulateLandmarks} = await import('../src/engine/simulate.js');
+  const {loadSession} = await import('../src/engine/session.js');
+  const {runPipeline} = await import('../src/engine/pipeline.js');
+  const dir = join(tmp(), 's');
+  const sim = simulateSession({dir, protocol, participantId: 'D1', seed: 5, cameras: [{id: 'cam4k', w: 3840, h: 2160, hfovDeg: 78}]});
+  const spec = {tag: 'dist', preprocess: {resize: [1280, 720]}, geometry: {distance: 'iris'}};
+  simulateLandmarks(sim, spec);
+  // drop the manual measurements, as the recorder no longer asks for them
+  const ev = readFileSync(join(dir, 'events.jsonl'), 'utf8').split('\n').filter(l => l && !l.includes('block_measure'));
+  writeFileSync(join(dir, 'events.jsonl'), ev.join('\n') + '\n');
+  const session = loadSession(dir);
+  const {qc, rows} = runPipeline(session, spec);
+  for (const b of session.timeline.blocks.values()) {
+    const nominal = sim.blocks.find(x => x.id === b.id).distance_cm;  // true simulated distance
+    const est = qc.distance[b.id].cm;
+    assert.equal(qc.distance[b.id].source, 'iris');
+    assert.ok(Math.abs(est - nominal) / nominal < 0.06, `${b.id}: est ${est} vs ${nominal}`);
+  }
+  assert.ok(rows.some(r => r.level === 'pooled' && Number.isFinite(r.mean_err_deg)));
+  assert.throws(() => runPipeline(session, {...spec, geometry: {distance: 'iris'}, camera: 'nocam'}));
+});
