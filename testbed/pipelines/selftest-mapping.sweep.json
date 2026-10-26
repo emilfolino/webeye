@@ -1,0 +1,15 @@
+{
+  "tagPrefix": "selfmap",
+  "description": "Mapping sweep on the dev self-test session (smoke test): polynomial degree and ridge strength with corner-relative iris features",
+  "base": {"camera": "cam4k", "preprocess": {"resize": [640, 480]}, "model": {"runtime": "mediapipe", "refineLandmarks": true}, "features": {"type": "iris-eye-mean"}},
+  "factors": {
+    "mapping": [
+      {"label": "d1-l0.001", "value": {"type": "poly", "degree": 1, "lambda": 0.001}},
+      {"label": "d1-l0.1", "value": {"type": "poly", "degree": 1, "lambda": 0.1}},
+      {"label": "d2-l0.001", "value": {"type": "poly", "degree": 2, "lambda": 0.001}},
+      {"label": "d2-l0.01", "value": {"type": "poly", "degree": 2, "lambda": 0.01}},
+      {"label": "d2-l0.1", "value": {"type": "poly", "degree": 2, "lambda": 0.1}},
+      {"label": "d2-l1", "value": {"type": "poly", "degree": 2, "lambda": 1}}
+    ]
+  }
+}

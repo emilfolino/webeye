@@ -211,6 +211,9 @@ export function runPipeline(session, specIn) {
       n_noface: cnt.noface, n_blink: cnt.blink, n_gp3gated: cnt.gp3,
       loss: inWin.length ? 1 - usable.length / inWin.length : NaN,
       fit_ok: fitOk ? 1 : 0,
+      // Mean predicted gaze point (diagnostics: scale/offset vs. looking away).
+      pred_x_px: usable.length ? usable.reduce((a, u) => a + u.pred[0], 0) / usable.length : '',
+      pred_y_px: usable.length ? usable.reduce((a, u) => a + u.pred[1], 0) / usable.length : '',
     };
     if (!fitOk || !usable.length) {
       rows.push(mk(tg, common));
