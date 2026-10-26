@@ -6,12 +6,12 @@ import {KEYPOINT_SUBSET} from '/shared/keypoints.js';
 
 const $ = id => document.getElementById(id);
 const status = s => { $('status').textContent = s; };
-const PROTOCOLS = ['webeye-main.protocol.json'];
+const PROTOCOLS = [['webeye-main.protocol.json', 'webeye-main (study)'], ['webeye-quick.protocol.json', 'webeye-quick (~1 min smoke test, not for the study)']];
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const now = () => performance.now();
 
 // ---------- setup UI ----------
-for (const p of PROTOCOLS) $('protocol').add(new Option(p, p));
+for (const [file, label] of PROTOCOLS) $('protocol').add(new Option(label, file));
 let devices = [];
 async function refreshDevices() {
   try { (await navigator.mediaDevices.getUserMedia({video: true})).getTracks().forEach(t => t.stop()); } catch (e) { status(`camera permission: ${e.message}`); }
@@ -39,6 +39,41 @@ await refreshDevices();
 addCam('cam4k', 3840, 2160, 30);
 addCam('camlow', 640, 480, 30);
 if (devices.length > 1) document.querySelectorAll('select.dev')[1].selectedIndex = 1;
+
+
+// ---------- screen size: credit-card calibration ----------
+// Browsers cannot report physical screen size. The participant (or operator)
+// holds an ISO ID-1 card (85.60 x 53.98 mm; bank card, ID, driving licence)
+// against the screen and resizes the on-screen rectangle until it matches.
+// Assumes square pixels. Done fullscreen so CSS px equal those used by the stimulus.
+const CARD_MM = {w: 85.60, h: 53.98};
+function calibrateScreen(ctx, W, H) {
+  return new Promise(res => {
+    let w = 324;  // ~ a card at 96 dpi
+    const draw = () => {
+      const h = w * CARD_MM.h / CARD_MM.w;
+      ctx.fillStyle = '#808080'; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = '#fff'; ctx.fillRect((W - w) / 2, (H - h) / 2, w, h);
+      ctx.strokeStyle = '#000'; ctx.lineWidth = 2; ctx.strokeRect((W - w) / 2, (H - h) / 2, w, h);
+      ctx.fillStyle = '#000'; ctx.font = '20px system-ui'; ctx.textAlign = 'center';
+      ctx.fillText('Hold a bank/ID card flat against the screen and resize this rectangle to match it.', W / 2, H / 2 - h / 2 - 70);
+      ctx.fillText('Left/Right arrows (or mouse wheel): resize   Shift = coarse   Enter = confirm', W / 2, H / 2 - h / 2 - 36);
+    };
+    const done = () => {
+      removeEventListener('keydown', onKey); removeEventListener('wheel', onWheel);
+      const mmPerPx = CARD_MM.w / w;
+      res({cardPx: w, mmPerPx, widthMm: Math.round(W * mmPerPx * 10) / 10, heightMm: Math.round(H * mmPerPx * 10) / 10});
+    };
+    const onKey = e => {
+      const step = e.shiftKey ? 10 : 1;
+      if (e.code === 'ArrowRight') w += step; else if (e.code === 'ArrowLeft') w -= step;
+      else if (e.code === 'Enter') return done();
+      w = Math.max(100, Math.min(W * 0.9, w)); draw();
+    };
+    const onWheel = e => { w = Math.max(100, Math.min(W * 0.9, w - Math.sign(e.deltaY) * (e.shiftKey ? 10 : 2))); draw(); };
+    addEventListener('keydown', onKey); addEventListener('wheel', onWheel); draw();
+  });
+}
 
 // ---------- upload plumbing ----------
 const api = (path, opt) => fetch(path, opt);
@@ -100,7 +135,9 @@ async function run() {
   const W = window.innerWidth, H = window.innerHeight;
   canvas.width = W * dpr; canvas.height = H * dpr; canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
   const ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr);
-  const screenInfo = {widthPx: W, heightPx: H, widthMm: +$('wmm').value, heightMm: +$('hmm').value, pixelRatio: dpr};
+  const cal = await calibrateScreen(ctx, W, H);
+  const screenInfo = {widthPx: W, heightPx: H, widthMm: cal.widthMm, heightMm: cal.heightMm, pixelRatio: dpr,
+    sizeMethod: 'card', cardPx: cal.cardPx, mmPerPx: cal.mmPerPx};
 
   const sessionId = `${pid}-${new Date().toISOString().replace(/[:.]/g, '-')}`;
   const fmt = $('fmt').value;

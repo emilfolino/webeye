@@ -13,6 +13,7 @@ for (const dir of process.argv.slice(2)) {
   const m = s.manifest;
   for (const k of ['sessionId', 'participant', 'screen', 'cameras', 'consent']) if (!m[k]) errs.push(`manifest.${k} missing`);
   if (m.screen && !(m.screen.widthMm > 0 && m.screen.heightMm > 0)) errs.push('screen size in mm missing');
+  else if (m.screen && !m.simulated && (m.screen.widthMm < 150 || m.screen.widthMm > 1500)) warns.push(`implausible screen width ${m.screen.widthMm} mm (card calibration off?)`);
   if (!s.events.some(e => e.type === 'session_start')) errs.push('no session_start event');
   if (!s.events.some(e => e.type === 'session_end')) errs.push('no session_end (recording interrupted?)');
   if (m.aborted) warns.push('session was aborted by the operator');

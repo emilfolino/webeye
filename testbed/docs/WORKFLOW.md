@@ -9,7 +9,7 @@
 ```bash
 node bin/serve.js --data data/sessions --gp3 127.0.0.1:4242     # drop --gp3 to record without reference
 ```
-Open `http://localhost:8099/`, enter the pseudonym and a counterbalancing index (0, 1, 2, ... in order of arrival), measure the visible screen size in mm, choose the cameras (e.g. `cam4k`, `camlow`), tick consent, start. The page goes fullscreen and runs `protocols/webeye-main.protocol.json`. At each block the participant presses SPACE and the operator types the measured eye-to-screen distance. `Shift+Esc` aborts (the session is kept and flagged). Afterwards:
+Open `http://localhost:8099/`, enter the pseudonym and a counterbalancing index (0, 1, 2, ... in order of arrival), choose the cameras (e.g. `cam4k`, `camlow`), tick consent, start. The page goes fullscreen and first measures the screen: hold a bank/ID card (85.6 mm wide) against the screen and resize the on-screen rectangle to match it (arrows/wheel, Enter). Physical screen size is derived from this (square pixels assumed) and stored in the manifest. It then runs the chosen protocol (`webeye-main`; `webeye-quick` is a ~1 min smoke test, not for the study). At each block the participant presses SPACE and the operator types the measured eye-to-screen distance. `Shift+Esc` aborts (the session is kept and flagged). Afterwards:
 
 ```bash
 node bin/validate-session.js data/sessions/<id>      # exit 1 on hard failures
