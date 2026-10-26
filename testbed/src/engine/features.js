@@ -24,6 +24,9 @@ function eyeFeatures(rec, iris, eye) {
     v: (-dx * vy + dy * vx) / width,
     z: (c[2] - (outer[2] + inner[2]) / 2) / width,
     ear: dist(top, bottom) / width,
+    // Iris centre between the lids (0 = upper lid, 1 = lower lid): a vertical cue that
+    // does not depend on the eyelid opening, which shrinks when looking down.
+    lidPos: (c[1] - top[1]) / ((bottom[1] - top[1]) || 1),
     irisDiameterPx: (dist(pt(rec, iris[1]), pt(rec, iris[3])) +
                      dist(pt(rec, iris[2]), pt(rec, iris[4]))) / 2,
   };
@@ -65,7 +68,7 @@ function headPose(rec) {
 /**
  * Build the feature vector for one landmark record.
  * @param spec features spec: {type: 'iris-mean'|'iris-eye-mean'|'iris-eye',
- *   headPose?: bool, useZ?: bool}
+ *   headPose?: bool, useZ?: bool, lid?: bool}
  * @returns number[] or null when the face is unusable
  */
 export function computeFeatures(rec, spec) {
@@ -90,6 +93,12 @@ export function computeFeatures(rec, spec) {
     } else {
       throw new Error(`Unknown feature type "${spec.type}"`);
     }
+  }
+  if (spec.lid) {
+    // Vertical cues: iris position between the lids and the eyelid opening (both eyes averaged).
+    const r = eyeFeatures(rec, KP.rightIris, KP.rightEye);
+    const l = eyeFeatures(rec, KP.leftIris, KP.leftEye);
+    f.push((r.lidPos + l.lidPos) / 2, (r.ear + l.ear) / 2);
   }
   if (spec.headPose) {
     const h = headPose(rec);

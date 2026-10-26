@@ -18,7 +18,7 @@ export const SPEC_DEFAULTS = {
     maxFaces: 1,
     lib: 'cdn',            // which build of the library the worker loads
   },
-  features: {type: 'iris-eye-mean', headPose: false, useZ: false},
+  features: {type: 'iris-eye-mean', headPose: false, useZ: false, lid: false},
   mapping: {type: 'poly', degree: 2, lambda: 1e-3},
   filter: {type: 'none'},
   calibration: {subset: '25', aggregate: 'samples'},

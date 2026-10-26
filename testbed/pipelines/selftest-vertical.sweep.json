@@ -1,0 +1,17 @@
+{
+  "tagPrefix": "selfvert",
+  "description": "Vertical-cue features on the dev self-test session (smoke test): iris position between the lids and eyelid opening",
+  "base": {"camera": "cam4k", "preprocess": {"resize": [640, 480]}, "model": {"runtime": "mediapipe", "refineLandmarks": true}},
+  "factors": {
+    "features": [
+      {"label": "eyemean", "value": {"type": "iris-eye-mean"}},
+      {"label": "eyemean-lid", "value": {"type": "iris-eye-mean", "lid": true}},
+      {"label": "eye-lid", "value": {"type": "iris-eye", "lid": true}},
+      {"label": "eyemean-lid-z", "value": {"type": "iris-eye-mean", "lid": true, "useZ": true}}
+    ],
+    "mapping": [
+      {"label": "d1", "value": {"type": "poly", "degree": 1, "lambda": 0.001}},
+      {"label": "d2-l1", "value": {"type": "poly", "degree": 2, "lambda": 1}}
+    ]
+  }
+}
