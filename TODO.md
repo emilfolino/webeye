@@ -24,6 +24,8 @@ Each keypoint carries a `z` value (depth, roughly same scale as `x`). Assess whe
 
 For a more granular approach, crop and affine-warp the eye region from the full video frame using the eye bounding keypoints before passing to any secondary model. The warp matrix can be derived from the four eye-corner keypoints. This would allow higher effective resolution on the eye even from a lower-resolution camera feed.
 
+**Test plan (zoom on the eyes/pupils using the face mesh):** use the face-mesh eye and iris landmarks from a cheap pass on the downscaled frame to locate each eye, then cut an upscaled, roll-corrected eye patch from the *full-resolution* frame (e.g. 128–256 px square, centred on the iris centre, scaled by eye width). Feed that patch to the iris/pupil stage in item 9. In the testbed this is a new preprocess + model stage (landmarks are cached per session, camera, preprocess and model), so it can be compared against the plain 640×480 and 1080p full-frame pipelines on the same recordings. Compare on precision (jitter), accuracy and the GP3 reference, and check that gains come from the extra pixels rather than the crop itself by also running the crop from a 640×480 source.
+
 ## 7. Remove the mobile hard-cap or make it configurable
 
 `isMobile()` in `util.js` silently caps resolution to 360×270 on phones. If testing on a mobile device, this needs to be lifted or made an opt-in override via a URL parameter.
@@ -37,3 +39,12 @@ Add a calibrated pupil-diameter signal to the final model. It is valuable on its
 - Ground truth: the Gazepoint GP3 reports pupil diameter (`PUPIL_*`, already enabled in `testbed/src/server/gp3_bridge.js`), so the testbed can score it like gaze.
 - Confounds to control or model: screen luminance (the pupillary light reflex), viewing distance, gaze angle (foreshortening of the pupil ellipse), eyelid occlusion and eye colour/contrast (dark brown irises hide the pupil in visible light).
 - Report as a new metric next to accuracy/precision (e.g. pupil error in mm and correlation with GP3 over time), with its own pipeline tag.
+
+## 9. Iris detection from the "zoomed-in" eye video
+
+Create an iris (and later pupil, see item 8) detector that runs on the zoomed eye crops from item 6 instead of the 192×192 face-mesh input. Open questions and options:
+
+- Start classical: sub-pixel limbus ellipse fit (edge/gradient based, per frame) on the crop, initialised from the mesh iris points; check whether it beats the mesh iris centre on precision.
+- Then learned: a small iris/pupil landmark or segmentation model on the crops. Labels could come from the classical fit, synthetic eyes (UnityEyes, NVGaze) or manual annotation. The GP3 gives gaze and pupil diameter, not iris position, so it can score the result but not label the iris.
+- Output should keep the current feature interface (`features.js`: iris centre relative to the eye corners and lids, plus iris diameter) so mapping and metrics stay unchanged, and report its own pipeline tag per variant.
+- Run it as a browser-worker model stage so landmarks stay cached per (session, camera, preprocess, model).
