@@ -8,6 +8,7 @@
 // Missing landmark caches are written as jobs to <data>/_jobs; run the
 // worker (see docs/WORKFLOW.md), then re-run. Default split is "dev";
 // confirm/all require every spec to carry "frozen": true and are logged.
+import {fileURLToPath} from 'node:url';
 import {appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync} from 'node:fs';
 import {join, resolve} from 'node:path';
 import {parseArgs} from 'node:util';
@@ -17,7 +18,7 @@ import {landmarkKey, preprocessKey, specHash} from '../src/engine/spec.js';
 import {loadSpecs} from '../src/engine/sweep.js';
 import {appendRegistry, datasetId, gitInfo, summarise, toCsv} from '../src/engine/results.js';
 
-const root = new URL('..', import.meta.url).pathname;
+const root = fileURLToPath(new URL('..', import.meta.url));
 const {values: a, positionals} = parseArgs({
   allowPositionals: true,
   options: {

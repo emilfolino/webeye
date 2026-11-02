@@ -1,3 +1,4 @@
+import {fileURLToPath} from 'node:url';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import net from 'node:net';
@@ -9,8 +10,8 @@ import {landmarkKey} from '../src/engine/spec.js';
 import {tmp} from './helpers.js';
 
 const hasFfmpeg = spawnSync('ffmpeg', ['-version']).status === 0;
-const web = new URL('../src/web', import.meta.url).pathname;
-const shared = new URL('../src/shared', import.meta.url).pathname;
+const web = fileURLToPath(new URL('../src/web', import.meta.url));
+const shared = fileURLToPath(new URL('../src/shared', import.meta.url));
 
 test('recorder upload flow + landmark job flow + path safety + GP3 capture', {skip: !hasFfmpeg}, async () => {
   const data = tmp();

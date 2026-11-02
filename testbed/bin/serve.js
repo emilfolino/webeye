@@ -2,11 +2,12 @@
 // Start the local study server.
 //   node bin/serve.js [--data data/sessions] [--port 8099] [--gp3 127.0.0.1:4242]
 // Then open http://localhost:8099/ (recorder) or /web/worker.html (landmark worker).
+import {fileURLToPath} from 'node:url';
 import {join} from 'node:path';
 import {parseArgs} from 'node:util';
 import {createStudyServer} from '../src/server/server.js';
 
-const root = new URL('..', import.meta.url).pathname;
+const root = fileURLToPath(new URL('..', import.meta.url));
 const {values: a} = parseArgs({options: {
   data: {type: 'string', default: join(root, 'data/sessions')}, port: {type: 'string', default: '8099'},
   gp3: {type: 'string'},

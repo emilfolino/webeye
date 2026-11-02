@@ -2,6 +2,7 @@
 // Generate simulated sessions (+ landmark caches for the given specs) to
 // exercise the toolchain end to end. Output is NOT real data.
 //   node bin/simulate.js --out /tmp/sim --n 12 --specs pipelines/resolution-sweep.sweep.json
+import {fileURLToPath} from 'node:url';
 import {readFileSync} from 'node:fs';
 import {join, resolve} from 'node:path';
 import {parseArgs} from 'node:util';
@@ -9,7 +10,7 @@ import {simulateSession, simulateLandmarks} from '../src/engine/simulate.js';
 import {loadSpecs} from '../src/engine/sweep.js';
 import {gaussian, mulberry32} from '../src/shared/rng.js';
 
-const root = new URL('..', import.meta.url).pathname;
+const root = fileURLToPath(new URL('..', import.meta.url));
 const {values: a, positionals} = parseArgs({allowPositionals: true, options: {
   out: {type: 'string'}, n: {type: 'string', default: '8'}, specs: {type: 'string', multiple: true},
   seed: {type: 'string', default: '1'}, protocol: {type: 'string', default: join(root, 'protocols/webeye-main.protocol.json')},
