@@ -53,11 +53,48 @@ Leave it running. It listens on 127.0.0.1 only (not reachable from the network).
 - Optionally measure the eye-to-screen distance with a tape measure at the start and enter it (`start distance`). Otherwise the distance is estimated from iris size (about +-10%).
 - Re-calibrate the GP3 between blocks if the participant moved a lot.
 
-## 7. Move the data to the analysis machine
+## 7. Get the session to the analysis machine
 
-Each session is one folder under `data\sessions\`. Zip it and copy it to the Linux machine's `testbed/data/sessions/`. The folder contains **face video (biometric data)**: use an encrypted drive or the university's approved storage, not a public cloud link, and delete the Windows copy after the transfer is verified.
+Copy the session folder to the analysis machine, then validate and replay it. Nothing is uploaded anywhere.
 
-Then on the analysis machine: `node bin/validate-session.js data/sessions/<id>`, `node bin/replay.js ...` (see `README.md` and `docs/WORKFLOW.md`).
+**Find the session.** Each recording is one folder in `data\sessions\`, named `<pseudonym>-<timestamp>`. It holds `manifest.json`, `events.jsonl`, `gp3.jsonl` (the GP3 stream) and `cameras\<cam>\` with the frame images. Everything in the session folder is needed; skip `_jobs` and `_cache`.
+
+**Pack it.** Frames are already JPEG, so compression does not shrink them. A 1-minute session was about 870 MB; a `webeye-main` session will be several GB. `tar` is built into Windows 10 and later and is faster than `Compress-Archive` for large folders:
+
+```powershell
+tar -cf session.tar -C data\sessions <session-folder>
+```
+
+Under WSL2 you can skip this and copy the folder directly (`\\wsl$\...` or `/mnt/c/...`).
+
+**Transfer.** Use an encrypted USB drive, `scp`/`rsync` over the LAN, or the university's approved storage. The folder contains **face video (biometric data)**: do not use a public cloud link, and delete the Windows copy after the transfer is verified.
+
+**Unpack and validate (analysis machine):**
+
+```bash
+cd ~/git/webeye/testbed
+tar -xf session.tar -C data/sessions
+node bin/validate-session.js data/sessions/<session-folder>
+```
+
+It should say `ok` and report the GP3 clock fit. If it fails, keep the folder and the output.
+
+**Replay.** Mind the hold-out split first: `node bin/split.js NAME`. A `confirm` session is only replayed with specs marked `"frozen": true` (`replay.js` refuses otherwise).
+
+```bash
+# GP3 as its own pipeline (noise floor, same metrics)
+node bin/replay.js --data data/sessions --specs pipelines/gp3-reference.json --sessions <id>
+# Webcam pipeline, scored against the stimulus (and the GP3 for QC)
+node bin/replay.js --data data/sessions --specs pipelines/baseline.json --sessions <id>
+```
+
+The first webcam replay queues landmark jobs and exits. Run `node bin/serve.js --data data/sessions` and open `http://localhost:8099/web/worker.html` in a browser (a GPU browser is much faster than a headless one), then re-run the replay command. Landmarks are cached, so mapping and feature changes do not need the worker again.
+
+Results go to `results/<timestamp>/rows.csv`; accuracy and precision per tag are appended to `experiments/registry.csv`. Multi-participant analysis (`analysis/analyze.py`) is described in `README.md` and `docs/WORKFLOW.md`.
+
+**Check on the first GP3 session (untested on real hardware):**
+- The GP3 timestamps are aligned to the webcam clock by regression. Look for a clock residual under about 10 ms in the `validate-session` output before trusting any comparison with the GP3.
+- The GP3 record fields were written from the Gazepoint API documentation and have only run against a fake server. If `gp3.jsonl` is empty or has missing fields, check `parseRec` in `src/server/gp3_bridge.js` first.
 
 ## Alternative: run the server in WSL2
 
