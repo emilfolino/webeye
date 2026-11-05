@@ -1,6 +1,7 @@
 // Recording session: runs the declarative protocol (shared/protocol.js) while
 // capturing timestamped frames from one or more cameras, stimulus events and
 // clock-sync pings, uploading everything to the local server.
+import {headCueState, drawHeadCue, HEAD_DIRS} from '/web/head_cue.js';
 import {buildSchedule, pursuitPosition} from '/shared/protocol.js';
 import {KEYPOINT_SUBSET} from '/shared/keypoints.js';
 
@@ -279,12 +280,30 @@ async function run() {
       await waitKey('Space');
       showText('');
     } else if (s.type === 'instruction') {
-      ev({type: 'instruction', text: s.text}); showText(`${s.text}\n\nPress SPACE.`); await waitKey('Space'); showText('');
+      ev({type: 'instruction', text: s.text, illustration: s.illustration});
+      if (s.illustration === 'headmove') {
+        // Looping demo of the head turns under the text, until SPACE.
+        overlay.classList.add('top'); showText(`${s.text}\n\nPress SPACE.`);
+        let go = false; waitKey('Space').then(() => { go = true; });
+        const t0 = now();
+        while (!go && !aborted) { clear(); drawHeadCue(ctx, W / 2, H * 0.68, Math.min(W, H) * 0.13, headCueState(now() - t0, {loop: true})); await frameWait(); }
+        overlay.classList.remove('top');
+      } else { showText(`${s.text}\n\nPress SPACE.`); await waitKey('Space'); }
+      showText('');
     } else if (s.type === 'sync') {
       ev({type: 'sync', durationMs: s.durationMs}); await hold(s.durationMs, () => { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H); });
     } else if (s.type === 'target') {
       ev({type: 'target_on', id: s.id, blockId: s.blockId, role: s.role, set: s.set, rep: s.rep, index: s.index, x: s.x, y: s.y, nx: s.nx, ny: s.ny, subsets: s.subsets, settleMs: s.settleMs, collectMs: s.collectMs, kind: s.kind});
-      await hold(s.durationMs, () => dot(s.x, s.y));
+      let lastCue = '';
+      await hold(s.durationMs, t => {
+        dot(s.x, s.y);
+        if (s.kind !== 'headmove') return;
+        // Cue animation in the lower periphery; the participant keeps looking at the centre dot.
+        const st = headCueState(t - s.settleMs, {segmentMs: s.collectMs / HEAD_DIRS.length});
+        const key = `${st.dir}:${st.phase}`;
+        if (key !== lastCue) { lastCue = key; ev({type: 'headmove_cue', id: s.id, dir: st.dir, phase: st.phase}); }
+        drawHeadCue(ctx, W / 2, H * 0.8, Math.min(W, H) * 0.07, st);
+      });
       ev({type: 'target_off', id: s.id});
     } else if (s.type === 'pursuit') {
       ev({type: 'pursuit_on', id: s.id, blockId: s.blockId, role: s.role, path: s.path, settleMs: s.settleMs, durationMs: s.durationMs});
@@ -294,7 +313,7 @@ async function run() {
     hud.textContent = caps.map(c => `${c.c.id}: ${c.n} frames, ${c.up.drops} drops, q=${c.up.q.length}`).join(' | ');
   }
   ev({type: 'session_end', aborted});
-  showText('Thank you — finishing upload…'); clear();
+  clear(); showText(aborted ? 'The test was stopped.\n\nPlease stay seated while the recording is saved…' : 'The test is finished.\n\nPlease stay seated while the recording is saved…');
 
   // ---------- teardown ----------
   caps.forEach(c => { c.stop = true; });
@@ -306,6 +325,8 @@ async function run() {
   const summary = Object.fromEntries(caps.map(c => [c.c.id, {frames: c.n, drops: c.up.drops, uploadErrors: c.up.errors}]));
   await api(`/api/sessions/${sessionId}/complete`, {method: 'POST', body: JSON.stringify({aborted, capture: summary, endedAt: new Date().toISOString()})});
   camCfgs.forEach(c => c.stream.getTracks().forEach(t => t.stop()));
+  clear(); showText(aborted ? 'The test was stopped.\n\nThe recording has been saved.\n\nPress SPACE to close.' : 'The test is over. Thank you for taking part!\n\nThe recording has been saved.\n\nPress SPACE to close.');
+  await waitKey('Space'); showText('');
   await document.exitFullscreen?.().catch(() => {});
   canvas.style.display = 'none'; overlay.style.display = 'none'; hud.style.display = 'none'; $('setup').style.display = 'block';
   status(`Done. Session ${sessionId}\n${JSON.stringify(summary, null, 1)}`);

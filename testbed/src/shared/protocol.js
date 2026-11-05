@@ -108,7 +108,7 @@ export function buildSchedule(protocol, screen, participantIndex = 0) {
       const rand = mulberry32(seed);
       const base = {blockId: block.id, stepIdx};
       if (step.kind === 'instruction') {
-        schedule.push({...base, type: 'instruction', text: step.text});
+        schedule.push({...base, type: 'instruction', text: step.text, illustration: step.illustration || null});
       } else if (step.kind === 'sync') {
         schedule.push({...base, type: 'sync', durationMs: step.durationMs || 1000});
       } else if (step.kind === 'fixation' || step.kind === 'headmove') {

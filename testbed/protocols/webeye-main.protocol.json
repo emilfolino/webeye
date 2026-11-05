@@ -208,7 +208,8 @@
    },
    {
     "kind": "instruction",
-    "text": "Look at the centre dot and slowly turn your head left, right, up and down."
+    "text": "Keep looking at the centre dot and slowly turn your head left, right, up and down, following the animation at the bottom of the screen.",
+        "illustration": "headmove"
    },
    {
     "kind": "headmove",

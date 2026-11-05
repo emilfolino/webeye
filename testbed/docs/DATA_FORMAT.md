@@ -12,7 +12,7 @@
 
 **Time**: every `t` is browser `performance.now()` in ms; frame `t` is the camera capture time when the browser exposes it (`requestVideoFrameCallback`). `clock_sync` events `{t, t1, serverT}` map browser to server time; GP3 `time` is mapped to server time by regression over the per-sample `rx` stamps (`src/engine/sync.js`).
 
-**Events**: `session_start`, `block_start {blockId, condition, calibrationFrom}`, `block_measure {distance_cm}` (optional; no longer written by the recorder), `instruction`, `sync`, `target_on {id, x, y, nx, ny, role, set, rep, index, subsets, settleMs, collectMs}` / `target_off {id}`, `pursuit_on {path, durationMs}` / `pursuit_off`, `gp3_marker`, `session_end {aborted}`. Target ids are `block:role:set:rep:index`.
+**Events**: `session_start`, `block_start {blockId, condition, calibrationFrom}`, `block_measure {distance_cm}` (optional; no longer written by the recorder), `instruction`, `sync`, `target_on {id, x, y, nx, ny, role, set, rep, index, subsets, settleMs, collectMs}` / `target_off {id}`, `pursuit_on {path, durationMs}` / `pursuit_off`, `headmove_cue {id, dir, phase}` (head-turn animation: dir left|right|up|down, phase out|hold|back, written on each change during a headmove target), `gp3_marker`, `session_end {aborted}`. Target ids are `block:role:set:rep:index`.
 
 **Landmark record**: `{i, t, ok, ms, kp}`; `kp` is the stored keypoint subset (`src/shared/keypoints.js`, header field `subset` lists mesh indices) as `[x, y, z]` in pixels of the (preprocessed) frame, **unmirrored**. Mesh index convention: 468-472 is the subject's **right** iris (image left; corners 33/133), 473-477 the left iris (263/362).
 
