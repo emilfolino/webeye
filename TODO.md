@@ -48,3 +48,14 @@ Create an iris (and later pupil, see item 8) detector that runs on the zoomed ey
 - Then learned: a small iris/pupil landmark or segmentation model on the crops. Labels could come from the classical fit, synthetic eyes (UnityEyes, NVGaze) or manual annotation. The GP3 gives gaze and pupil diameter, not iris position, so it can score the result but not label the iris.
 - Output should keep the current feature interface (`features.js`: iris centre relative to the eye corners and lids, plus iris diameter) so mapping and metrics stay unchanged, and report its own pipeline tag per variant.
 - Run it as a browser-worker model stage so landmarks stay cached per (session, camera, preprocess, model).
+
+## 10. Blink tracking and storage
+
+We want to track blinks and store them as a first-class signal, not only drop blink frames. Today blinks are only gated out by an eye-aspect-ratio threshold (`gating.blinkEar: 0.12` in `testbed/src/engine/spec.js`, applied in `pipeline.js`) and counted as `n_blink`.
+
+- Detect blinks from the eye aspect ratio over time (`features.js` `ear`): onset, duration, closure depth and rate per session and per block (the dim-light block is a natural place to look at rate).
+- Store them with the results as an events table (e.g. `blinks.csv` per session and pipeline tag: `t_on, t_off, duration_ms, min_ear, camera`), so later analysis does not need to recompute them. Keep the per-frame blink flag in the sample rows too.
+- Validate the 0.12 threshold on real recordings. Ground truth: the GP3 flags pupil validity (`lpv`/`rpv`) as invalid during blinks, so GP3 blink timing is available in the Windows sessions. Report detection precision/recall and onset timing error against it, per camera and resolution (the eye aspect ratio is noisier at low resolution).
+- Tune a margin before and after each blink: frames while the lid closes/reopens distort the iris position. Check the effect on accuracy and precision.
+- Blink rate and duration are indicators of fatigue and cognitive load; pair with the pupil signal (item 8).
+- Report with its own pipeline tag, next to accuracy/precision.
