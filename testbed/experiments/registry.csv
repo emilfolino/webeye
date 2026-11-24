@@ -41,3 +41,17 @@ selfvert-005,1f9599ef151b,2026-10-26,3ce59cc,1,5f957e3e13,dev,1,1,10.905283,24.6
 selfvert-006,6f7caf16cb87,2026-10-26,3ce59cc,1,5f957e3e13,dev,1,1,9.010298,23.084958,6.710078,7.524166,0,Vertical-cue features on the dev self-test session (smoke test): iris position between the lids and eyelid opening | eye-lid d2-l1
 selfvert-007,dd1ab1a57e4d,2026-10-26,3ce59cc,1,5f957e3e13,dev,1,1,11.283931,25.712187,6.95927,6.321837,0,Vertical-cue features on the dev self-test session (smoke test): iris position between the lids and eyelid opening | eyemean-lid-z d1
 selfvert-008,4a3b2abf7161,2026-10-26,3ce59cc,1,5f957e3e13,dev,1,1,11.784366,21.280051,5.487706,7.380281,0,Vertical-cue features on the dev self-test session (smoke test): iris position between the lids and eyelid opening | eyemean-lid-z d2-l1
+ref-gp3,56ad35a30834,2026-11-24,f3b2d63,0,33522093fe,dev,1,1,2.290816,8.185625,2.141129,1.091307,0,"first real GP3-validated smoke test, dev pseudonym 0001"
+v001-baseline,ae73e9c603a9,2026-11-24,f3b2d63,1,33522093fe,dev,1,1,37.732291,64.824843,5.135173,2.959271,0,"first GP3-validated smoke test, dev pseudonym 0001"
+ref-gp3,56ad35a30834,2026-11-24,f3b2d63,1,33522093fe,dev,1,1,2.290816,8.185625,2.141129,1.091307,0,"first GP3-validated smoke test, dev pseudonym 0001"
+s0001features-001,e76e120c75f3,2026-11-24,f3b2d63,1,33522093fe,dev,1,1,37.732291,64.824843,5.135173,2.959271,0,0001 smoke test: feature and mapping sweeps (dev)
+s0001features-002,7942446ab581,2026-11-24,f3b2d63,1,33522093fe,dev,1,1,6.885248,14.362784,4.587539,4.422878,0,0001 smoke test: feature and mapping sweeps (dev)
+s0001features-003,e96ab9acf8d8,2026-11-24,f3b2d63,1,33522093fe,dev,1,1,17.167275,35.757418,6.486571,5.851128,0,0001 smoke test: feature and mapping sweeps (dev)
+s0001features-004,c91ddec93156,2026-11-24,f3b2d63,1,33522093fe,dev,1,1,13.891142,24.96828,7.190634,6.397396,0,0001 smoke test: feature and mapping sweeps (dev)
+s0001features-005,84f58a13ab85,2026-11-24,f3b2d63,1,33522093fe,dev,1,1,18.232819,35.110891,6.360857,5.647205,0,0001 smoke test: feature and mapping sweeps (dev)
+s0001mapping-001,54f73693aff2,2026-11-24,f3b2d63,1,33522093fe,dev,1,1,4.702591,12.683052,4.382938,4.111248,0,0001 smoke test: feature and mapping sweeps (dev)
+s0001mapping-002,75099d2a320a,2026-11-24,f3b2d63,1,33522093fe,dev,1,1,4.564162,11.746443,3.914854,3.650362,0,0001 smoke test: feature and mapping sweeps (dev)
+s0001mapping-003,c15b8fc6c0ad,2026-11-24,f3b2d63,1,33522093fe,dev,1,1,6.885248,14.362784,4.587539,4.422878,0,0001 smoke test: feature and mapping sweeps (dev)
+s0001mapping-004,86ca2aa310eb,2026-11-24,f3b2d63,1,33522093fe,dev,1,1,6.797038,14.225786,4.514518,4.343671,0,0001 smoke test: feature and mapping sweeps (dev)
+s0001mapping-005,f09223666fb1,2026-11-24,f3b2d63,1,33522093fe,dev,1,1,6.180324,12.741712,3.935909,3.73087,0,0001 smoke test: feature and mapping sweeps (dev)
+s0001mapping-006,7fef0ab81bd4,2026-11-24,f3b2d63,1,33522093fe,dev,1,1,6.487919,12.664221,2.109561,2.000355,0,0001 smoke test: feature and mapping sweeps (dev)
