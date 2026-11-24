@@ -265,6 +265,7 @@ async function run() {
   async function hold(durMs, draw) {
     const t0 = now();
     while (now() - t0 < durMs && !aborted) { clear(); draw?.(now() - t0); await frameWait(); }
+    clear(); // don't leave the last frame (e.g. the white sync flash) behind the next text screen
   }
 
   ev({type: 'session_start'});
